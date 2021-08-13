@@ -133,7 +133,7 @@ class WriteData extends Scraper {
         super();
     }
 
-    resultsFile = {}
+    resultsFile
     seasonCalendar = 'https://sport.sky.it/formula-1/calendario'
 
     gpUrls = {
@@ -166,6 +166,14 @@ class WriteData extends Scraper {
     }
 
     init = () => {
+        const now = new Date()
+        if (now.getDate() === 13 && now.getMonth() + 1 === 8 && now.getHours() === 14 && now.getMinutes() === 57) {
+            this.saveData()
+            console.log(`The function ran at ${now.getHours()}:${now.getMinutes()}`)
+        }
+    }
+
+    saveData = () => {
         Object.entries(this.gpUrls).forEach(([key, value], index) => {
             const raceID = index + 1
             const raceName = key

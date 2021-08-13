@@ -1,4 +1,9 @@
 const WriteData = require('./scraper')
 
 const saveData = new WriteData()
-saveData.init()
+const now = new Date()
+const delay = 60000 - (now % 60000)
+
+setTimeout(saveData.init, delay)
+
+
