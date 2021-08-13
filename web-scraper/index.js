@@ -1,7 +1,7 @@
 const scraper = require('./scraper')
 const fs = require('fs')
 const Scraper = require('./scraper')
-let resultsFile = require('./results.json')
+let resultsFile = {}
 
 const gpUrls = {
     baharain: 'https://sport.sky.it/formula-1/gp/granpremio-bahrain/risultati',
@@ -34,33 +34,34 @@ let data = {
 }
 
 const getDataGP = (url, key) => {
-        return scraper.getTurnResults(url)
-            .then((res) => {
-                data.GP.push({[key]: res})
-                return data
-            })
-        }
+    return scraper.getTurnResults(url)
+        .then((res) => {
+            data.GP.push({[key]: res})
+            return data
+        })
+}
 
 Object.entries(gpUrls).forEach(([key, value]) => {
     getDataGP(value, key)
-    .then((res) => {
-        fs.writeFile('results.json', JSON.stringify(res, null, 2), (err) => {
-        if (err) console.log(err)
-        insertCalendar(seasonCalendar)
-        console.log(resultsFile.GP.length, resultsFile.calendar.length)
-    }
-    )
-})
-    .catch((err) => console.log(err))
+        .then((res) => {
+            fs.writeFile('results.json', JSON.stringify(res, null, 2), (err) => {
+                    if (err) console.log(err)
+                    console.log(`====> ${key} results were saved`)
+                }
+            )
+        })
+        .then(() => insertCalendar(seasonCalendar))
+        .catch((err) => console.log(err))
 })
 
 const insertCalendar = (url) => {
     return Scraper.getSeasonCalendar(url)
-    .then((res) => {
-        resultsFile['calendar'] = res
-        fs.writeFile('./results.json', JSON.stringify(resultsFile, null, 2), (err) => {
-            if (err) console.log(err)
-        }
-        )
-    })
+        .then((res) => {
+            resultsFile = require('./results.json')
+            resultsFile['calendar'] = res
+            fs.writeFile('./results.json', JSON.stringify(resultsFile, null, 2), (err) => {
+                    if (err) console.log(err)
+                }
+            )
+        })
 }
