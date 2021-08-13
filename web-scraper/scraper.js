@@ -1,8 +1,9 @@
 const axios = require('axios')
 const cheerio = require('cheerio');
+const fs = require('fs')
 
 class Scraper {
-    static getTurnResults = (url, raceName, raceID) => {
+    getTurnResults = (url, raceName, raceID) => {
         let dataArray = []
         let results = {
             id: raceID,
@@ -64,7 +65,7 @@ class Scraper {
         });
     }
 
-    static getSeasonCalendar = (url) => {
+    getSeasonCalendar = (url) => {
         let listGP = []
         let dateGP = []
         let calendar = []
@@ -98,7 +99,7 @@ class Scraper {
         })
     }
 
-    static sliceIntoChunks = (arr, chunkSize, stratingIndex) => {
+    sliceIntoChunks = (arr, chunkSize, stratingIndex) => {
         const res = [];
         if(arr) {
             for (let i = stratingIndex; i < arr.length; i += chunkSize) {
@@ -109,7 +110,7 @@ class Scraper {
         return res;
     }
 
-    static arrayReducer = (arr) => {
+    arrayReducer = (arr) => {
         let result = []
         let pilotInfo = {}
         const formattedArray = this.sliceIntoChunks(arr, 2, 0)
@@ -127,5 +128,83 @@ class Scraper {
     }
 }
 
-module.exports = Scraper
+class WriteData extends Scraper {
+    constructor() {
+        super();
+    }
+
+    resultsFile = {}
+    seasonCalendar = 'https://sport.sky.it/formula-1/calendario'
+
+    gpUrls = {
+        baharain: 'https://sport.sky.it/formula-1/gp/granpremio-bahrain/risultati',
+        imolaGP: 'https://sport.sky.it/formula-1/gp/granpremio-emilia-romagna/risultati',
+        portugalGP: 'https://sport.sky.it/formula-1/gp/granpremio-portogallo/risultati',
+        barcelonaGP: 'https://sport.sky.it/formula-1/gp/granpremio-spagna/risultati',
+        monacoGP: 'https://sport.sky.it/formula-1/gp/granpremio-monaco/risultati',
+        azerbaijanGP: 'https://sport.sky.it/formula-1/gp/granpremio-azerbaijan/risultati',
+        franceGP: 'https://sport.sky.it/formula-1/gp/granpremio-francia/risultati',
+        stiriaGP: 'https://sport.sky.it/formula-1/gp/granpremio-stiria/risultati',
+        redBullRing: 'https://sport.sky.it/formula-1/gp/granpremio-austria/risultati',
+        silverstoneGP: 'https://sport.sky.it/formula-1/gp/granpremio-gran-bretagna/risultati',
+        hungarianGP: 'https://sport.sky.it/formula-1/risultati',
+        spaGP: 'https://sport.sky.it/formula-1/gp/granpremio-belgio/risultati',
+        zandvoortGP: 'https://sport.sky.it/formula-1/gp/granpremio-olanda/risultati',
+        monzaGP: 'https://sport.sky.it/formula-1/gp/granpremio-italia/risultati',
+        russianGP: 'https://sport.sky.it/formula-1/gp/granpremio-russia/risultati',
+        turkishGP: 'https://sport.sky.it/formula-1/gp/granpremio-turchia/risultati',
+        suzukaGP: 'https://sport.sky.it/formula-1/gp/granpremio-giappone/risultati',
+        usaGP: 'https://sport.sky.it/formula-1/gp/granpremio-stati-uniti/risultati',
+        mexicanGP: 'https://sport.sky.it/formula-1/gp/granpremio-messico/risultati',
+        brasilGP: 'https://sport.sky.it/formula-1/gp/granpremio-brasile/risultati',
+        arabianGP: 'https://sport.sky.it/formula-1/gp/granpremio-arabia-saudita/risultati',
+        abuDhabiGP: 'https://sport.sky.it/formula-1/gp/granpremio-abu-dhabi/risultati'
+    }
+
+    data = {
+        GP: [],
+    }
+
+    init = () => {
+        Object.entries(this.gpUrls).forEach(([key, value], index) => {
+            const raceID = index + 1
+            const raceName = key
+            this.getDataGP(value, raceName, raceID)
+                .then((res) => {
+                    fs.writeFile('results.json', JSON.stringify(res, null, 2), (err) => {
+                            if (err) console.log(err)
+                            console.log(`====> ${raceName} results were saved`)
+                        }
+                    )
+                })
+                .then(() => this.insertCalendar(this.seasonCalendar))
+                .catch((err) => console.log(err))
+        })
+    }
+
+    getDataGP = (url, raceName, raceID) => {
+        return this.getTurnResults(url, raceName, raceID)
+            .then((res) => {
+                this.data.GP.push(res)
+                this.data.GP.sort((it, el) => it.id - el.id)
+                return this.data
+            })
+    }
+
+    insertCalendar = (url) => {
+        return this.getSeasonCalendar(url)
+            .then((res) => {
+                this.resultsFile = require('./results.json')
+                this.resultsFile['calendar'] = res
+                fs.writeFile('./results.json', JSON.stringify(this.resultsFile, null, 2), (err) => {
+                        if (err) console.log(err)
+                    }
+                )
+            })
+    }
+}
+
+module.exports = WriteData
+
+
 
