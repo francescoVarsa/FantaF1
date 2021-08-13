@@ -2,9 +2,11 @@ const axios = require('axios')
 const cheerio = require('cheerio');
 
 class Scraper {
-    static getTurnResults = (url) => {
+    static getTurnResults = (url, raceName, raceID) => {
         let dataArray = []
         let results = {
+            id: raceID,
+            raceName: raceName,
             raceResults: [],
             startingGrid: [],
             qualifyngSession: {

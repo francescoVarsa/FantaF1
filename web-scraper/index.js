@@ -33,20 +33,23 @@ let data = {
     GP: [],
 }
 
-const getDataGP = (url, key) => {
-    return scraper.getTurnResults(url)
+const getDataGP = (url, raceName, raceID) => {
+    return scraper.getTurnResults(url, raceName, raceID)
         .then((res) => {
-            data.GP.push({[key]: res})
+            data.GP.push(res)
+            data.GP.sort((it, el) => it.id - el.id)
             return data
         })
 }
 
-Object.entries(gpUrls).forEach(([key, value]) => {
-    getDataGP(value, key)
+Object.entries(gpUrls).forEach(([key, value], index) => {
+    const raceID = index + 1
+    const raceName = key
+    getDataGP(value, raceName, raceID)
         .then((res) => {
             fs.writeFile('results.json', JSON.stringify(res, null, 2), (err) => {
                     if (err) console.log(err)
-                    console.log(`====> ${key} results were saved`)
+                    console.log(`====> ${raceName} results were saved`)
                 }
             )
         })
